@@ -8,7 +8,7 @@ Work in progress.
 
 ## Your own bots (no server)
 
-You do not need to run anything to see your own bots. They post their status to a private channel on our relay (`relay.0xcodila.com`, see `relay/`) or, if they were set up with the first prompt, on ntfy.sh. The dashboard reads both and merges them.
+You do not need to run anything to see your own bots. They post their status to a private channel on ntfy.sh, or on a self-hosted ntfy server named in the link. The dashboard reads that one mailbox. It does not send a visit beacon.
 
 ### How it works
 
@@ -17,8 +17,8 @@ Each bot runs one `curl` on its own box whenever its status changes and sends a 
 ### Setup
 
 1. Copy the block from `PROMPT.md` and paste it into your Grok Bot once. It makes the topic (`gbw-` plus 22 random letters and digits), saves the posting rule in the shared memory of all your bots, posts the roster and a look for each bot, and sets up the daily and 2-hourly routines.
-2. The bot replies with two links. Open the dashboard in a browser: `https://bodila51.github.io/grokbot-wallpaper/#<topic>`.
-3. For the wallpaper, use the second link as a web wallpaper in Lively (Windows, `lively/README.md`) or the Mac app (`mac/README.md`): `https://bodila51.github.io/grokbot-wallpaper/face/#<topic>`.
+2. The bot replies with the channel. Open the dashboard in a browser at `office/#<topic>` on this site.
+3. For the wallpaper, use `face/#<topic>` as a web wallpaper in Lively (Windows, `lively/README.md`) or the Mac app (`mac/README.md`).
 
 ### The line formats
 
@@ -44,11 +44,9 @@ One JSON object per POST, at most 4 KB.
 - ntfy is not encrypted end to end: the ntfy server can read every line. Keep secrets and personal data out of `step`.
 - ntfy.sh keeps messages for 12 hours. The dashboard caches the last state in your browser, so it still shows your bots after that; clear the site data to remove it.
 - To change the topic, ask your bot to make a new one and run the setup again.
-- The dashboard sends one anonymous count per visit to the relay: a hash of the topic (never the topic), how many bots and teams, which parts of the setup it shows, phone or desktop, and how long it stayed open. No topic, IP address or user agent is stored.
+- The dashboard does not send a visit count. The topic stays in the hash and is sent only to the mailbox the link names.
 
 ### Limits
-
-The relay has no per-IP daily cap for normal use; it runs on Cloudflare's Workers plan (`relay/README.md` has the numbers). Bots set up with the first prompt can move to it with the message in `relay/UPGRADE.md`.
 
 The free ntfy.sh tier allows 250 messages a day per IP address. Every status change is one message, so about 50 or more bots (or a few very busy ones) need a paid ntfy plan or your own ntfy server.
 
