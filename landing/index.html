@@ -14,30 +14,29 @@ addEventListener('hashchange', toOffice);                  // the link pasted in
 <meta name="description" content="Grok Bot’s first wallpaper + dashboard. Grok Bot lives on your desktop, and so do your bots: live, free for Windows and Mac.">
 <meta name="theme-color" content="#FFFFFF">
 <meta property="og:type" content="website">
-<link rel="canonical" href="https://0xcodila.com/grokbot-wallpaper/">
-<meta property="og:url" content="https://0xcodila.com/grokbot-wallpaper/">
+<link rel="canonical" href="./">
+<meta property="og:url" content="./">
 <meta property="og:site_name" content="Grok Bot Wallpaper">
 <meta property="og:title" content="Grok Bot Wallpaper">
 <meta property="og:description" content="Grok Bot lives on your desktop, and so do your bots: live, free.">
-<meta property="og:image" content="https://0xcodila.com/grokbot-wallpaper/og.png">
+<meta property="og:image" content="og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Grok Bot, a big glossy white ball with two eyes, rising under an open sky">
 <meta name="twitter:card" content="player">
-<meta name="twitter:site" content="@0xCodila">
 <meta name="twitter:title" content="Grok Bot Wallpaper">
 <meta name="twitter:description" content="Grok Bot lives on your desktop, and so do your bots: live, free.">
-<meta name="twitter:player" content="https://0xcodila.com/grokbot-wallpaper/embed/">
+<meta name="twitter:player" content="embed/">
 <meta name="twitter:player:width" content="1280">
 <meta name="twitter:player:height" content="720">
-<meta name="twitter:image" content="https://0xcodila.com/grokbot-wallpaper/og.png">
+<meta name="twitter:image" content="og.png">
 <link rel="icon" href="assets/brand/logo-mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/brand/logo-mark.png">
 <link rel="preload" href="fonts/host-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <style>
 /* One rounded stage holds the live wallpaper and the two downloads; below it the film, then the install steps on a
    graphite panel, tiles of one family (one radius, one gap, copy at the top of each). Colours are the wallpaper's own:
-   its studio white, the graphite of its cards, the light text on them. Type is Host Grotesk, the face of 0xcodila.com. */
+   its studio white, the graphite of its cards, the light text on them. Type is Host Grotesk, served from this site. */
 @font-face {
   font-family: 'Host Grotesk Variable';
   font-style: normal;
@@ -353,8 +352,8 @@ footer .links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
     <h1>Grok Bot’s first wallpaper + dashboard</h1>
     <p>Grok Bot lives on your desktop, and so do your bots: live, free.</p>
     <div class="stage__actions">
-      <a class="btn btn--big btn--ink" data-os="windows" href="https://github.com/Bodila51/grokbot-wallpaper/releases/download/windows-v1.0/grokbot-wallpaper-windows.zip"><svg class="os" aria-hidden="true"><use href="#os-windows"/></svg><span>Download for Windows <small>for Lively Wallpaper (free)</small></span></a>
-      <a class="btn btn--big btn--white" data-os="mac" href="https://github.com/Bodila51/grokbot-wallpaper/releases/latest/download/GrokBotWallpaper.dmg"><svg class="os os--apple" aria-hidden="true"><use href="#os-apple"/></svg><span>Download for Mac <small>macOS 13 or later</small></span></a>
+      <a class="btn btn--big btn--ink" data-os="windows" href="download/grokbot-wallpaper-windows.zip"><svg class="os" aria-hidden="true"><use href="#os-windows"/></svg><span>Download for Windows <small>for Lively Wallpaper (free)</small></span></a>
+      <a class="btn btn--big btn--white" data-os="mac" href="#mac"><svg class="os os--apple" aria-hidden="true"><use href="#os-apple"/></svg><span>Mac app <small>build it from mac/ in this repo</small></span></a>
     </div>
   </div>
   <div class="pick" role="radiogroup" aria-label="Grok Bot colour" data-bot="white">
@@ -403,7 +402,7 @@ footer .links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
           <h3 id="windows-title">Windows</h3>
           <p class="platform__needs">Windows 10 or 11</p>
           <div class="get">
-            <a class="btn btn--light" href="https://github.com/Bodila51/grokbot-wallpaper/releases/download/windows-v1.0/grokbot-wallpaper-windows.zip"><svg class="os" aria-hidden="true"><use href="#os-windows"/></svg>Download .zip</a>
+            <a class="btn btn--light" href="download/grokbot-wallpaper-windows.zip"><svg class="os" aria-hidden="true"><use href="#os-windows"/></svg>Download .zip</a>
             <span class="get__note">For Lively Wallpaper (free)</span>
           </div>
           <ol class="how">
@@ -416,13 +415,13 @@ footer .links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
           <h3 id="mac-title">Mac</h3>
           <p class="platform__needs">macOS 13 or later</p>
           <div class="get">
-            <a class="btn btn--light" href="https://github.com/Bodila51/grokbot-wallpaper/releases/latest/download/GrokBotWallpaper.dmg"><svg class="os os--apple" aria-hidden="true"><use href="#os-apple"/></svg>Download .dmg</a>
-            <span class="get__note">Apple silicon and Intel</span>
-            <span class="get__note get__note--wrap">If Chrome blocks it, download with Safari or choose Keep.</span>
+            <a class="btn btn--light" href="#mac"><svg class="os os--apple" aria-hidden="true"><use href="#os-apple"/></svg>Mac app</a>
+            <span class="get__note">Build it from mac/ in this repo</span>
+            <span class="get__note get__note--wrap">This site does not offer a prebuilt app.</span>
           </div>
           <ol class="how">
-            <li><span><b>Open the .dmg.</b> It is in your Downloads.</span></li>
-            <li><span><b>Drag Grok Bot Wallpaper to Applications.</b></span></li>
+            <li><span><b>Build the app on a Mac.</b> Run <span class="path">bash mac/build.sh</span>. It writes <span class="path">mac/dist/GrokBotWallpaper.dmg</span>.</span></li>
+            <li><span><b>Open the .dmg and drag Grok Bot Wallpaper to Applications.</b></span></li>
             <li><span><b>First launch: macOS says it can’t check the app.</b> Click Done, then open <span class="path">System Settings → Privacy &amp; Security</span>, scroll down and click Open Anyway. The app isn’t notarized yet, so this happens once.<small class="how__aside">On macOS 14 or earlier: right-click the app, then Open.</small></span></li>
           </ol>
         </article>
@@ -455,7 +454,7 @@ footer .links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
       <p class="tile__copy">Someone gave you this page and asked you to set it up? Here is what to do.</p>
       <ol>
         <li><b>Grok Bot:</b> show the user what the setup prompt below does and ask them to confirm once, then run it step by step. It adds one status line to each bot’s instructions, posts only the bots’ names, statuses, teams, looks, routines, chat links and usage percent to a private channel, and ends with the user’s link. That link works like a password: give it only to the user.</li>
-        <li><b>An agent on the user’s computer</b> (Claude Code and others). Windows 10 or 11: the user installs Lively Wallpaper (free, Microsoft Store); download <code>https://github.com/Bodila51/grokbot-wallpaper/releases/download/windows-v1.0/grokbot-wallpaper-windows.zip</code> and ask the user to drag it into Lively (Lively can’t import it from the command line). macOS 13 or later: download <code>https://github.com/Bodila51/grokbot-wallpaper/releases/latest/download/GrokBotWallpaper.dmg</code>, copy Grok Bot Wallpaper.app to /Applications and open it; the user approves it once in System Settings → Privacy &amp; Security → Open Anyway.</li>
+        <li><b>An agent on the user’s computer</b> (Claude Code and others). Windows 10 or 11: the user installs Lively Wallpaper (free, Microsoft Store); download <code>download/grokbot-wallpaper-windows.zip</code> and ask the user to drag it into Lively (Lively can’t import it from the command line). macOS 13 or later: build the app from <code>mac/</code> in this repo, copy Grok Bot Wallpaper.app to /Applications and open it; the user approves it once in System Settings → Privacy &amp; Security → Open Anyway.</li>
         <li><b>Bots on the wallpaper:</b> the user pastes the link from Grok Bot into Lively (Customise → Your bots channel) or, on a Mac, into the 👀 menu-bar icon → Bots channel….</li>
       </ol>
       <h3>The setup prompt for Grok Bot</h3>
@@ -666,7 +665,7 @@ function relabel(text) {                                  // the new words come 
   if (!calm.matches && copyPrompt.animate) copyPrompt.animate([{ opacity: 0.2, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0px)' }], { duration: 260, easing: 'cubic-bezier(.23, 1, .32, 1)' });
 }
 copyPrompt.addEventListener('click', async () => {
-  if (!promptText) { sfx?.press(); window.open('https://github.com/Bodila51/grokbot-wallpaper/blob/main/PROMPT.md', '_blank', 'noopener'); return; }
+  if (!promptText) { sfx?.press(); window.open('PROMPT.md', '_blank', 'noopener'); return; }
   try { await navigator.clipboard.writeText(promptText); relabel('Copied. Paste it into Grok Bot'); sfx?.copied(); }
   catch { relabel('Copy did not work: open PROMPT.md on GitHub'); sfx?.tick(); }
   clearTimeout(copyPrompt.t); copyPrompt.t = setTimeout(() => relabel('Copy the setup prompt'), 2600);

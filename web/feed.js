@@ -1,12 +1,10 @@
 // Bots-only mode: the office reads the user's bots straight from their channel. No server, no tunnel.
-// The link is …/#<topic>. A plain link reads the same topic on two mailboxes and merges them: our relay (RELAY, relay/ in
-// this repo, where bots set up with the current prompt post) and ntfy.sh (FEED_BASE in lib/feedbase.js, where bots set
-// up with the first prompt post). #<topic>@<host>, ?feed=<host> or the older #<topic>&ntfy=<server> name one mailbox
-// (a self-hosted ntfy) and read only that. The topic lives in the hash, so it never reaches any server but those. The
-// same reducer the local server uses (lib/state.js) turns the lines into the office's state. The mailboxes keep 12 hours,
-// so the newest lines are cached per topic in localStorage and replayed first: after a quiet night the office is not
-// empty, every bot is still there, resting. A `working` bot that stays silent for 20 minutes counts as idle (it forgot
-// its closing line).
+// The link is …/#<topic>. That topic is read from one mailbox: ntfy.sh (FEED_BASE in lib/feedbase.js), or the single
+// mailbox named by #<topic>@<host>, ?feed=<host> or the older #<topic>&ntfy=<server> (a self-hosted ntfy). The topic
+// lives in the hash, so it never reaches any server but that mailbox. The same reducer the local server uses
+// (lib/state.js) turns the lines into the office's state. The mailbox keeps 12 hours, so the newest lines are cached
+// per topic in localStorage and replayed first: after a quiet night the office is not empty, every bot is still there,
+// resting. A `working` bot that stays silent for 20 minutes counts as idle (it forgot its closing line).
 //
 // Lines on the channel (one JSON object per message, at most 4 KB, anything else is dropped):
 //   {"bot":"…","status":"working|idle|waiting_user|error|done","step":"…"}     a status change
@@ -23,24 +21,23 @@
 import { StateStore, botIdFor } from './lib/state.js';
 import { FEED_BASE, feedFromLink } from './lib/feedbase.js';
 
-const RELAY = 'https://relay.0xcodila.com', NTFY = 'https://ntfy.sh';
-const MAX_LINE = 4096, KEEP = 600, TICK_MS = 30e3, DAY_MS = 24 * 3600e3, PING_MS = 60e3;
+const NTFY = 'https://ntfy.sh';
+const MAX_LINE = 4096, KEEP = 600, TICK_MS = 30e3, DAY_MS = 24 * 3600e3;
 const QUIET_MS = 20 * 60e3, CHECK_MS = 6 * 3600e3;    // a silent worker turns idle; a status check stays up this long
 // Everyone's bots, ours included, are built from their look (the app's 14 avatars and 11 colours, read from a
 // screenshot), so a bot in the office is the bot in the app. The hand-made GLBs in assets/blobs/ stay for the local server.
 const HANDMADE = new Set();
 
-/** The page's hash and query -> { topic, servers: [mailboxes, no trailing slash] }, or null without a topic.
- *  A plain link reads both mailboxes; a link that names one reads that one. */
+/** The page's hash and query -> { topic, servers: [one mailbox, no trailing slash] }, or null without a topic. */
 export function feedFromHash(hash, search = '') {
   const f = feedFromLink({ hash: hash || '', search });
   if (!f) return null;
-  return { topic: f.topic, servers: f.base === FEED_BASE ? [RELAY, NTFY] : [f.base.replace(/\/$/, '')] };
+  return { topic: f.topic, servers: [f.base.replace(/\/$/, '')] };
 }
 
 /** Rebuild from cache + each mailbox's last 12 h, then follow them live. Calls onState(state) on every change. */
 export async function connectFeed({ topic, servers }, onState) {
-  const sources = servers.map((server) => ({ server, tag: server.startsWith(RELAY) ? 'relay' : 'ntfy', base: `${server}/${encodeURIComponent(topic)}`, lastId: null }));
+  const sources = servers.map((server) => ({ server, tag: 'ntfy', base: `${server}/${encodeURIComponent(topic)}`, lastId: null }));
   const usual = servers.length > 1;                      // the plain link: both mailboxes, one cache
   const cacheKey = usual ? `bothq.feed.${topic}` : `bothq.feed.${servers[0]}.${topic}`;
   const oldKey = `bothq.feed.${NTFY}.${topic}`;         // the cache of the first single-mailbox office (ntfy.sh only)
@@ -66,10 +63,6 @@ export async function connectFeed({ topic, servers }, onState) {
   save();
   if (usual) try { localStorage.removeItem(oldKey); } catch { /* private mode */ }
   publish();
-  const bots = Object.values(cfg);
-  beacon(topic, { bots: store.bots.size, floors: new Set(bots.map((c) => c.floor).filter(Boolean)).size, tags: new Set(lines.map((l) => l.src)),
-    has: { usage: lines.some((l) => typeof l.message === 'string' && l.message.includes('"usage"')), routines: routines.size > 0,
-      chat: bots.some((c) => c.chat_url), teams: bots.some((c) => c.floor) } });
 
   for (const s of sources) follow(s);
   setInterval(() => { const v = store.version, s = store.snapshot(); if (store.version !== v) onState(extras(s)); }, TICK_MS);
@@ -97,25 +90,11 @@ export async function connectFeed({ topic, servers }, onState) {
     saveTimer = setTimeout(save, 2000);
     return ingest(l, false);
   }
-  function follow(s) {                                   // ntfy: an event stream; the relay: a WebSocket its server sleeps through
+  function follow(s) {                                   // ntfy: an event stream
     const on = (data) => { try { if (take(s, JSON.parse(data))) publish(); } catch { /* keepalive or junk */ } };
-    if (s.tag !== 'relay') {
-      const live = new EventSource(`${s.base}/sse`);
-      live.onopen = () => catchUp(s);                    // also after a reconnect: fetch what was missed
-      live.onmessage = (e) => on(e.data);
-      return;
-    }
-    let wait = 1e3, heard = Date.now();
-    (function open() {
-      const ws = new WebSocket(`${s.base.replace(/^http/, 'ws')}/ws`);
-      const ping = setInterval(() => {                   // "pong" comes back without waking the relay
-        if (Date.now() - heard > 2.5 * PING_MS) ws.close();   // silent: a dead link after sleep, start over
-        else if (ws.readyState === 1) ws.send('ping');
-      }, PING_MS);
-      ws.onopen = () => { wait = 1e3; heard = Date.now(); catchUp(s); };
-      ws.onmessage = (e) => { heard = Date.now(); if (e.data !== 'pong') on(e.data); };
-      ws.onclose = () => { clearInterval(ping); setTimeout(open, wait); wait = Math.min(wait * 2, 60e3); };
-    })();
+    const live = new EventSource(`${s.base}/sse`);
+    live.onopen = () => catchUp(s);                      // also after a reconnect: fetch what was missed
+    live.onmessage = (e) => on(e.data);
   }
   async function catchUp(s) {
     try {
@@ -202,26 +181,6 @@ export async function connectFeed({ topic, servers }, onState) {
   }
   function publish() { store.commit(); onState(extras(store.snapshot())); }
   function save() { try { localStorage.setItem(cacheKey, JSON.stringify(lines.slice(-KEEP))); } catch { /* private mode: not cached */ } }
-}
-
-/** Two anonymous pings for the private usage count: one when the office opens (a hash of the topic, never the topic; how
- *  many bots and teams; which mailbox; phone or not; which parts of the prompt are set up), one when the visit ends. */
-async function beacon(topic, { bots, floors, tags, has }) {
-  try {
-    const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(topic)));
-    const h = [...digest.slice(0, 8)].map((b) => b.toString(16).padStart(2, '0')).join('');
-    const src = tags.has('relay') ? (tags.has('ntfy') ? 'both' : 'relay') : tags.has('ntfy') ? 'ntfy' : 'none';
-    const phone = navigator.userAgentData?.mobile ?? /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || '');
-    const send = (data) => {                             // a string goes as text/plain: no CORS preflight
-      const body = JSON.stringify(data);
-      if (!navigator.sendBeacon?.(`${RELAY}/_beacon`, body)) fetch(`${RELAY}/_beacon`, { method: 'POST', body, keepalive: true }).catch(() => {});
-    };
-    send({ h, bots, floors, src, phone, has });
-    let ended = false;
-    const end = () => { if (!ended) { ended = true; send({ h, secs: Math.min(Math.round(performance.now() / 1000), 7 * 86400) }); } };
-    globalThis.addEventListener?.('pagehide', end);
-    globalThis.document?.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') end(); });
-  } catch { /* stats are optional */ }
 }
 
 function isMap(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }

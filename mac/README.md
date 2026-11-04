@@ -32,8 +32,8 @@ After that it opens like any app. It has no Dock icon, only the 👀 icon in the
 - **Reload wallpaper** reloads the page, e.g. after a design update.
 - **Bots channel…** connects your bots: paste your channel (`gbw-…`) or any dashboard or wallpaper link
   with it. The wallpaper then shows `…/face/#<channel>` and remembers it; an empty value removes the bots.
-- **Wallpaper address…** sets the page to show. Default: `https://bodila51.github.io/grokbot-wallpaper/face/`.
-  A topic link like `https://bodila51.github.io/grokbot-wallpaper/face/#your-topic` works (`https://` may be left
+- **Wallpaper address…** sets the page to show. Default: `http://127.0.0.1:8787/face/`.
+  A topic link like `http://127.0.0.1:8787/face/#your-topic` works (`https://` may be left
   out), and so does your own bot server: `http://localhost:8787/face/?key=…`
   (see [README-server.md](../README-server.md)). **Default** goes back to the demo.
 - **Match menu bar to wallpaper** (on by default) makes the system desktop picture a snapshot of the wallpaper,

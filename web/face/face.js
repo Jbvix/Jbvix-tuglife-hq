@@ -625,12 +625,11 @@ window.livelyPropertyListener = (name, value) => {
 
 // ---------- the user's own bots: their channel on ntfy.sh ----------
 // A link with #<channel> (or the older ?feed=<channel>), remembered after that, connects the wallpaper to the user's
-// bots; the hash never reaches GitHub Pages, and &ntfy=<https server> picks a self-hosted ntfy. Every bot posts one
+// bots; the hash never reaches the site host, and &ntfy=<https server> picks a self-hosted ntfy. Every bot posts one
 // line per status change, {"bot":"…","status":"…","step":"…"}, plus roster, looks and usage lines (README), to the
 // channel with plain curl; nothing else runs on the bots' box. The page reads the last 12 hours, then listens live.
 // The mailbox is FEED_BASE unless the link names another: #<channel>@<host>, ?feed=<host> or &ntfy=<https server>.
 const FEED_BASE = 'https://ntfy.sh/';                    // = FEED_BASE in office/lib/feedbase.js (a test keeps them equal)
-const RELAY = 'https://relay.0xcodila.com';              // our relay: bots set up with the current prompt post there
 const stored = (key) => { try { return localStorage.getItem(key); } catch { return null; } };
 // The channel out of whatever holds it: the channel itself (gbw-…, maybe @<server>), or a whole dashboard or wallpaper
 // link with it after # (Grok Bot replies with the dashboard link, and people paste that into Lively's box as it is).
@@ -722,9 +721,8 @@ async function connectFeed() {
   if (!saved.bots) saved = { bots: saved };              // the first version remembered the bots alone
   looks = saved.looks || {};
   state = { bots: saved.bots, usage: saved.usage ?? null };
-  // the usual mailbox (ntfy.sh) means "read both", like the office: bots on the first prompt post to ntfy.sh, bots on
-  // the current one to our relay; a link that names another server reads only that one
-  const boxes = (NTFY === FEED_BASE.replace(/\/$/, '') ? [RELAY, NTFY] : [NTFY]).map((s) => `${s}/${encodeURIComponent(FEED)}`);
+  // one mailbox: ntfy.sh, or the server the link names
+  const boxes = [`${NTFY}/${encodeURIComponent(FEED)}`];
   const seen = new Set();
   const fresh = (m) => { const k = `${m.time} ${m.message}`; return !seen.has(k) && !!seen.add(k); };   // a line in both boxes counts once
   const rows = [];
@@ -746,21 +744,7 @@ async function connectFeed() {
   const take = (data) => {
     try { const m = JSON.parse(data); if (m.event === 'message' && fresh(m) && applyLine(m.message, m.time)) { remember(); render(state); } } catch { /* keepalive or junk */ }
   };
-  for (const base of boxes) {
-    if (!base.startsWith(RELAY)) { new EventSource(`${base}/sse`).onmessage = (e) => take(e.data); continue; }
-    // the relay: a WebSocket its server sleeps through ("ping" is answered without waking it); reconnect with backoff
-    let wait = 1e3, heard = Date.now();
-    (function open() {
-      const ws = new WebSocket(`${base.replace(/^http/, 'ws')}/ws`);
-      const ping = setInterval(() => {
-        if (Date.now() - heard > 150e3) ws.close();
-        else if (ws.readyState === 1) ws.send('ping');
-      }, 60e3);
-      ws.onopen = () => { wait = 1e3; heard = Date.now(); };
-      ws.onmessage = (e) => { heard = Date.now(); if (e.data !== 'pong') take(e.data); };
-      ws.onclose = () => { clearInterval(ping); setTimeout(open, wait); wait = Math.min(wait * 2, 60e3); };
-    })();
-  }
+  for (const base of boxes) new EventSource(`${base}/sse`).onmessage = (e) => take(e.data);
   setInterval(() => { if (settleQuiet()) { remember(); render(state); } }, 60e3);
 }
 
